@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 
 const Home = () => {
   return (
-    <div className="h-screen w-screen bg-red-300">
+    <div className="">
       <Button>Click me</Button> 
     </div>
   )
