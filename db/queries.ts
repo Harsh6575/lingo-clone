@@ -2,7 +2,7 @@ import { cache } from "react";
 import db from "./drizzle";
 import { auth } from "@clerk/nextjs";
 import { eq } from "drizzle-orm";
-import { courses, units, userProgress } from "./schema";
+import { challengeProgress, courses, units, userProgress } from "./schema";
 
 // if we write cache infront of query then every time it does not goes to server for resource, if it has then return from here.
 
@@ -37,9 +37,12 @@ export const getCourseById = cache(async (courseId: number) => {
 });
 
 export const getUnits = cache(async () => {
+  const { userId } = await auth();
   const userProgress = await getUserProgress();
-  if (!userProgress?.activeCourseId) return [];
 
+  if (!userId || !userProgress?.activeCourseId) return [];
+
+  // TODO: Confirm that order is needed
   const data = await db.query.units.findMany({
     where: eq(units.courseId, userProgress.activeCourseId),
     with: {
@@ -47,13 +50,16 @@ export const getUnits = cache(async () => {
         with: {
           challenges: {
             with: {
-              challengeProgress: true,
+              challengeProgress: {
+                where: eq(challengeProgress.userId, userId),
+              },
             },
           },
         },
       },
     },
   });
+
   const normalizedData = data.map((unit) => {
     const lessonsWithCompletedStatus = unit.lessons.map((lesson) => {
       const allCompletedChallenges = lesson.challenges.every((challenge) => {
@@ -68,6 +74,7 @@ export const getUnits = cache(async () => {
         completed: allCompletedChallenges,
       };
     });
+
     return {
       ...unit,
       lessons: lessonsWithCompletedStatus,
