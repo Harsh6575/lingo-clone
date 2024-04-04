@@ -1,6 +1,6 @@
 import { challengeOptions, challenges } from "@/db/schema";
-import { Card } from "./card";
 import { cn } from "@/lib/utils";
+import { Card } from "./card";
 
 type Props = {
   options: (typeof challengeOptions.$inferSelect)[];

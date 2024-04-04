@@ -81,11 +81,45 @@ const main = async () => {
         type: "SELECT",
         question: 'What one of these is the "the man"?',
       },
+      {
+        id: 2, // Nouns
+        lessonId: 1, // Nouns
+        type: "ASSIST",
+        order: 2,
+        question: '"the man"',
+      },
+      {
+        id: 3,
+        lessonId: 1, // Nouns
+        type: "SELECT",
+        order: 1,
+        question: 'Which one of these is the "the robot"?',
+      },
+      {
+        id: 4,
+        lessonId: 1, // Nouns
+        type: "ASSIST",
+        order: 2,
+        question: '"the robot"',
+      },
+      {
+        id: 5,
+        lessonId: 1, // Nouns
+        type: "SELECT",
+        order: 1,
+        question: 'Which one of these is the "the woman"?',
+      },
+      {
+        id: 6,
+        lessonId: 1, // Nouns
+        type: "ASSIST",
+        order: 2,
+        question: '"the woman"',
+      },
     ]);
 
     await db.insert(schema.challengeOptions).values([
       {
-        id: 1,
         challengeId: 1,
         imageSrc: "/man.svg",
         correct: true,
@@ -93,21 +127,130 @@ const main = async () => {
         audioSrc: "/es_man.mp3",
       },
       {
-        id: 2,
         challengeId: 1,
-        imageSrc: '/woman.svg',
+        imageSrc: "/woman.svg",
         correct: false,
         text: "La mujer",
         audioSrc: "/es_woman.mp3",
       },
       {
-        id: 3,
         challengeId: 1,
-        imageSrc: '/robot.svg',
+        imageSrc: "/robot.svg",
         correct: false,
         text: "El robot",
         audioSrc: "/es_robot.mp3",
-      }
+      },
+    ]);
+
+    await db.insert(schema.challengeOptions).values([
+      {
+        challengeId: 2,
+        correct: true,
+        text: "El hombre",
+        audioSrc: "/es_man.mp3",
+      },
+      {
+        challengeId: 2,
+        correct: false,
+        text: "La mujer",
+        audioSrc: "/es_woman.mp3",
+      },
+      {
+        challengeId: 2,
+        correct: false,
+        text: "El robot",
+        audioSrc: "/es_robot.mp3",
+      },
+    ]);
+
+    await db.insert(schema.challengeOptions).values([
+      {
+        challengeId: 3,
+        imageSrc: "/man.svg",
+        correct: false,
+        text: "El hombre",
+        audioSrc: "/es_man.mp3",
+      },
+      {
+        challengeId: 3,
+        imageSrc: "/woman.svg",
+        correct: false,
+        text: "La mujer",
+        audioSrc: "/es_woman.mp3",
+      },
+      {
+        challengeId: 3,
+        imageSrc: "/robot.svg",
+        correct: true,
+        text: "El robot",
+        audioSrc: "/es_robot.mp3",
+      },
+    ]);
+
+    await db.insert(schema.challengeOptions).values([
+      {
+        challengeId: 4,
+        correct: false,
+        text: "El hombre",
+        audioSrc: "/es_man.mp3",
+      },
+      {
+        challengeId: 4,
+        correct: false,
+        text: "La mujer",
+        audioSrc: "/es_woman.mp3",
+      },
+      {
+        challengeId: 4,
+        correct: true,
+        text: "El robot",
+        audioSrc: "/es_robot.mp3",
+      },
+    ]);
+
+    await db.insert(schema.challengeOptions).values([
+      {
+        challengeId: 5,
+        imageSrc: "/man.svg",
+        correct: false,
+        text: "El hombre",
+        audioSrc: "/es_man.mp3",
+      },
+      {
+        challengeId: 5,
+        imageSrc: "/woman.svg",
+        correct: true,
+        text: "La mujer",
+        audioSrc: "/es_woman.mp3",
+      },
+      {
+        challengeId: 5,
+        imageSrc: "/robot.svg",
+        correct: false,
+        text: "El robot",
+        audioSrc: "/es_robot.mp3",
+      },
+    ]);
+
+    await db.insert(schema.challengeOptions).values([
+      {
+        challengeId: 6,
+        correct: false,
+        text: "El hombre",
+        audioSrc: "/es_man.mp3",
+      },
+      {
+        challengeId: 6,
+        correct: true,
+        text: "La mujer",
+        audioSrc: "/es_woman.mp3",
+      },
+      {
+        challengeId: 6,
+        correct: false,
+        text: "El robot",
+        audioSrc: "/es_robot.mp3",
+      },
     ]);
 
     console.log("Seeding finished");

@@ -2,10 +2,13 @@
 
 import { challengeOptions, challenges } from "@/db/schema";
 import { Header } from "./header";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { QuestionBubble } from "./question-bubble";
 import { Challenge } from "./challenge";
 import { Footer } from "./footer";
+import { upsertChallengeProgress } from "@/actions/challenge-progress";
+import { toast } from "sonner";
+import { reduceHearts } from "@/actions/use-progress";
 
 type Props = {
   initialPercentage: number;
@@ -25,8 +28,9 @@ export const Quiz = ({
   initialLessonChallenges,
   userSubscription,
 }: Props) => {
-  const [hearts, setHearts] = useState(initialHearts);
+  const [pending, startTransition] = useTransition();
 
+  const [hearts, setHearts] = useState(initialHearts);
   const [percentage, setPercentage] = useState(initialPercentage);
 
   const [challenges] = useState(initialLessonChallenges);
@@ -44,10 +48,92 @@ export const Quiz = ({
   const challenge = challenges[activeIndex];
   const options = challenge?.challengeOptions ?? [];
 
+  const onNext = () => {
+    setActiveIndex((current) => current + 1);
+  };
+
   const onSelect = (id: number) => {
     if (status !== "none") return;
 
     setSelectedOption(id);
+  };
+
+  const onContinue = () => {
+    if (!selectedOption) return;
+    if (status === "wrong") {
+      setStatus("none");
+      setSelectedOption(undefined);
+      return;
+    }
+    if (status === "correct") {
+      onNext();
+      setStatus("none");
+      setSelectedOption(undefined);
+      return;
+    }
+
+    const correctOption = options.find((option) => option.correct);
+
+    if (!correctOption) {
+      return;
+    }
+
+    const updateHearts = (status: "inc" | "dec") => {
+      if (status === "inc") setHearts((prev) => Math.min(prev + 1, 5));
+      if (status === "dec") setHearts((prev) => Math.max(prev - 1, 0));
+    };
+
+    if (correctOption && correctOption.id === selectedOption) {
+      const updatePercentage = () => {
+        setPercentage((prev) => (prev + 100) / challenges.length);
+      };
+      const handleChallengeProgress = () => {
+        upsertChallengeProgress(challenge.id)
+          .then((response) => {
+            if (response?.error === "hearts") {
+              console.error("Not enough hearts");
+              return;
+            }
+            setStatus("correct");
+            //  check this works correctly or not
+            // setPercentage((prev) => (prev + 100) / challenges.length);
+            updatePercentage();
+
+            // This is a practice lesson
+            if (initialPercentage === 100) {
+              // check this works correctly or not
+              // setHearts((prev) => Math.min(prev + 1, 5));
+              updateHearts("inc");
+            }
+          })
+          .catch(() => {
+            toast.error("Something went wrong. Please try again later.");
+          });
+      };
+
+      startTransition(handleChallengeProgress);
+    } else {
+      startTransition(() => {
+        reduceHearts(challenge.id)
+          .then((response) => {
+            if (response?.error === "hearts") {
+              console.error("Not enough hearts");
+              return;
+            }
+
+            setStatus("wrong");
+
+            if (!response?.error) {
+              // check this works correctly or not
+              // setHearts((prev) => Math.max(prev - 1, 0));
+              updateHearts("dec");
+            }
+          })
+          .catch(() => {
+            toast.error("Something went wrong. Please try again later.");
+          });
+      });
+    }
   };
 
   const title =
@@ -77,14 +163,18 @@ export const Quiz = ({
                 onSelect={onSelect}
                 status={status}
                 selectedOption={selectedOption}
-                disabled={false}
+                disabled={pending}
                 type={challenge.type}
               />
             </div>
           </div>
         </div>
       </div>
-      <Footer disabled={!selectedOption} status={status} onCheck={() => {}} />
+      <Footer
+        disabled={pending ?? !selectedOption}
+        status={status}
+        onCheck={onContinue}
+      />
     </>
   );
 };

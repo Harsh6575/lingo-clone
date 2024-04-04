@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+
 import {
   getCourseProgress,
   getLessonPercentage,
@@ -8,8 +9,9 @@ import {
 
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { StickyWrapper } from "@/components/sticky-wrapper";
-import { Header } from "./header";
 import { UserProgress } from "@/components/user-progress";
+
+import { Header } from "./header";
 import Unit from "./unit";
 
 const LearnPage = async () => {

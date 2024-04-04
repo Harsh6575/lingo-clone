@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { Loader } from "lucide-react";
 import {
@@ -9,7 +10,6 @@ import {
   SignedOut,
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 const Home = () => {
   return (
