@@ -1,14 +1,21 @@
 "use client";
 
-import { challengeOptions, challenges } from "@/db/schema";
-import { Header } from "./header";
-import { useState, useTransition } from "react";
-import { QuestionBubble } from "./question-bubble";
-import { Challenge } from "./challenge";
-import { Footer } from "./footer";
-import { upsertChallengeProgress } from "@/actions/challenge-progress";
 import { toast } from "sonner";
-import { reduceHearts } from "@/actions/use-progress";
+import Image from "next/image";
+import Confetti from "react-confetti";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useAudio, useWindowSize } from "react-use";
+
+import { reduceHearts } from "@/actions/user-progress";
+import { challengeOptions, challenges } from "@/db/schema";
+import { upsertChallengeProgress } from "@/actions/challenge-progress";
+
+import { Header } from "./header";
+import { Footer } from "./footer";
+import { Challenge } from "./challenge";
+import { ResultCard } from "./result-card";
+import { QuestionBubble } from "./question-bubble";
 
 type Props = {
   initialPercentage: number;
@@ -28,8 +35,19 @@ export const Quiz = ({
   initialLessonChallenges,
   userSubscription,
 }: Props) => {
+  const { width, height } = useWindowSize();
+
+  const router = useRouter();
+
+  const [finalAudio] = useAudio({ src: "/final.wav" });
+  const [correctAudio, _c, correctControls] = useAudio({ src: "/correct.wav" });
+  const [incorrectAudio, _i, incorrectControls] = useAudio({
+    src: "/incorrect.wav",
+  });
+
   const [pending, startTransition] = useTransition();
 
+  const [lessonId, setLessonId] = useState(initialLessonId);
   const [hearts, setHearts] = useState(initialHearts);
   const [percentage, setPercentage] = useState(initialPercentage);
 
@@ -60,6 +78,7 @@ export const Quiz = ({
 
   const onContinue = () => {
     if (!selectedOption) return;
+
     if (status === "wrong") {
       setStatus("none");
       setSelectedOption(undefined);
@@ -87,13 +106,14 @@ export const Quiz = ({
       const updatePercentage = () => {
         setPercentage((prev) => (prev + 100) / challenges.length);
       };
-      const handleChallengeProgress = () => {
+      startTransition(() => {
         upsertChallengeProgress(challenge.id)
           .then((response) => {
             if (response?.error === "hearts") {
               console.error("Not enough hearts");
               return;
             }
+            correctControls.play();
             setStatus("correct");
             //  check this works correctly or not
             // setPercentage((prev) => (prev + 100) / challenges.length);
@@ -109,9 +129,7 @@ export const Quiz = ({
           .catch(() => {
             toast.error("Something went wrong. Please try again later.");
           });
-      };
-
-      startTransition(handleChallengeProgress);
+      });
     } else {
       startTransition(() => {
         reduceHearts(challenge.id)
@@ -120,7 +138,7 @@ export const Quiz = ({
               console.error("Not enough hearts");
               return;
             }
-
+            incorrectControls.play();
             setStatus("wrong");
 
             if (!response?.error) {
@@ -136,6 +154,49 @@ export const Quiz = ({
     }
   };
 
+  if (!challenge) {
+    return (
+      <>
+        {finalAudio}
+        <Confetti
+          width={width}
+          height={height}
+          recycle={false}
+          numberOfPieces={500}
+          tweenDuration={10000}
+        />
+        <div className="flex flex-col gap-y-4 lg:gap-y-8 max-w-lg mx-auto text-center items-center justify-center h-full">
+          <Image
+            src="/finish.svg"
+            alt="Finish"
+            className="hidden lg:block"
+            height={100}
+            width={100}
+          />
+          <Image
+            src="/finish.svg"
+            alt="Finish"
+            className="block lg:hidden"
+            height={50}
+            width={50}
+          />
+          <h1 className="text-xl lg:text-3xl font-bold text-neutral-700">
+            Great job! <br /> You&apos;ve completed the lesson.
+          </h1>
+          <div className="flex items-center gap-x-4 w-full">
+            <ResultCard variant="points" value={challenges.length * 10} />
+            <ResultCard variant="hearts" value={hearts} />
+          </div>
+        </div>
+        <Footer
+          lessonId={lessonId}
+          status="completed"
+          onCheck={() => router.push("/learn")}
+        />
+      </>
+    );
+  }
+
   const title =
     challenge.type === "ASSIST"
       ? "Select the correct meaning"
@@ -143,6 +204,8 @@ export const Quiz = ({
 
   return (
     <>
+      {incorrectAudio}
+      {correctAudio}
       <Header
         hearts={hearts}
         percentage={percentage}

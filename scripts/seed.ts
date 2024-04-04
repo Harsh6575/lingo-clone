@@ -104,14 +104,14 @@ const main = async () => {
       },
       {
         id: 5,
-        lessonId: 1, // Nouns
+        lessonId: 2, // Nouns
         type: "SELECT",
         order: 1,
         question: 'Which one of these is the "the woman"?',
       },
       {
         id: 6,
-        lessonId: 1, // Nouns
+        lessonId: 2, // Nouns
         type: "ASSIST",
         order: 2,
         question: '"the woman"',
